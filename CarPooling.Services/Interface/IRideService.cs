@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CarPooling.Services.Interfaces
 {
-    public interface IRideServices
+    public interface IRideService
     {
         bool CreateRide(Ride ride);
 

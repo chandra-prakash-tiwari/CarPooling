@@ -8,6 +8,13 @@ namespace CarPooling.Models
 {
     public class Booking
     {
+        public Booking()
+        {
+            this.From = new Place();
+
+            this.To = new Place();
+        }
+
         public string Id { get; set; }
 
         public string RideId { get; set; }
@@ -29,6 +36,13 @@ namespace CarPooling.Models
 
     public class SearchRideRequest
     {
+        public SearchRideRequest()
+        {
+            this.From = new Place();
+
+            this.To = new Place();
+        }
+
         public Place From { get; set; }
 
         public Place To { get; set; }

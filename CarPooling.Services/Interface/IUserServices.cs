@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CarPooling.Services.Interfaces
 {
-    public interface IUserServices
+    public interface IUserService
     {
         bool AddNewUser(User user);
 
@@ -15,6 +15,6 @@ namespace CarPooling.Services.Interfaces
 
         bool DeleteUser(string id);
 
-        bool UpdateUserDetails(User newDetails, User oldDetails);
+        User GetUser(string id);
     }
 }

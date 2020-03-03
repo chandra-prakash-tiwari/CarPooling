@@ -10,8 +10,7 @@ namespace CarPooling.Models
 
     public enum HomeMenu
     {
-        Exit,
-        CreateRide,
+        CreateRide = 1,
         BookARide,
         ViewStatus,
         AddNewCar,
@@ -20,6 +19,7 @@ namespace CarPooling.Models
         UpdateAccountDetail,
         DeleteUserAccount,
         SignOut,
+        Exit,
     };
 
     public enum BookingStatusMenu
@@ -30,15 +30,6 @@ namespace CarPooling.Models
         SignOut,
         Exit
     };
-
-    public enum RideEndMenu
-    {
-        Owner = 1,
-        Rider,
-        MainMenu,
-        SignOut,
-        Exit
-    }
 
     public enum UpdateUserDetailMenu
     {

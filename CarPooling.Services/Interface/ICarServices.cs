@@ -7,13 +7,11 @@ using System.Threading.Tasks;
 
 namespace CarPooling.Services.Interfaces
 {
-    public interface ICarServices
+    public interface ICarService
     {
         bool AddNewCar(Car car);
 
-        bool RemoveCar(string id);
-
-        List<Car> GetCar(string ownerId);
+        List<Car> GetCars(string ownerId);
 
         Car GetRideCar(string carId);
     }

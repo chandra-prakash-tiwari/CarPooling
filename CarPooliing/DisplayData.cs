@@ -28,7 +28,7 @@ namespace CarPooling
 
         public static void CarDetail(string carId)
         {
-            var car = AppDataServices.Cars.FirstOrDefault(a => a.Id == carId);
+            var car = AppDataService.Cars.FirstOrDefault(a => a.Id == carId);
             Console.WriteLine(Constant.CarDetails);
             Console.WriteLine(Constant.CarNumber + car.Number);
             Console.WriteLine(Constant.CarModel + car.Model);

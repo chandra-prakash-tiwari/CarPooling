@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CarPooling.Services.Interfaces
 {
-    public interface IBookingServices
+    public interface IBookingService
     {
         bool CreateBooking(Booking booking, string rideId);
 

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace CarPooling.Services.Services
 {
-    public class AppDataServices
+    public class AppDataService
     {
         public static List<User> Users { get; set; }
 
@@ -15,7 +15,9 @@ namespace CarPooling.Services.Services
 
         public static List<Car> Cars { get; set; }
 
-        static AppDataServices()
+        public static User CurrentUser { get; set; }
+
+        static AppDataService()
         {
             Users = new List<User>();
 
@@ -24,6 +26,8 @@ namespace CarPooling.Services.Services
             Rides = new List<Ride>();
 
             Cars = new List<Car>();
+
+            CurrentUser = new User();
         }  
     }
 }

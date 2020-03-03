@@ -18,16 +18,16 @@ namespace CarPooling
         {
             Console.Write(Constant.MainMenuOptions);
             MainMenu option = (MainMenu)Helper.ValidInteger();
-            UserServices userServices = new UserServices();
+            UserService UserService = new UserService();
             switch (option)
             {
                 case Models.MainMenu.Login:
                     try
                     {
-                        User user = userServices.Authentication(UserInput.GetCredential());
+                        User user = UserService.Authentication(UserInput.GetCredential());
                         if (user != null)
                         {
-                            Menu menu = new Menu(user.Id);
+                            Menu menu = new Menu(user.Id, UserService);
                             menu.UserMainMenu();
                         }
                         else
@@ -45,7 +45,7 @@ namespace CarPooling
                     break;
 
                 case Models.MainMenu.Signup:
-                    userServices.AddNewUser(UserInput.NewUser());
+                    UserService.AddNewUser(UserInput.NewUser());
                     MainMenu();
 
                     break;
@@ -60,36 +60,42 @@ namespace CarPooling
 
     public class Menu
     {
-        public BookingServices BookingServices { get; set; }
+        public BookingService BookingService { get; set; }
 
-        public CarServices CarServices { get; set; }
+        public CarService CarService { get; set; }
 
-        public RideServices RideServices { get; set; }
+        public RideService RideService { get; set; }
+
+        public UserService UserService { get; set; }
 
         public string Id { get; set; }
 
-        public Menu(string Id)
+        public Menu(string id,UserService UserService)
         {
-            this.Id = Id;
+            this.Id = id;
 
-            this.BookingServices = new BookingServices(this.Id);
+            this.BookingService = new BookingService();
 
-            this.CarServices = new CarServices(this.Id);
+            this.CarService = new CarService();
 
-            this.RideServices = new RideServices(this.Id, this.BookingServices);
+            this.RideService = new RideService(this.BookingService);
+
+            this.UserService = UserService;
+
+            AppDataService.CurrentUser = UserService.GetUser(this.Id);
         }
 
         public void UserMainMenu()
         {
             Console.Write(Constant.UserMainMenuOptions);
             HomeMenu option = (HomeMenu)Helper.ValidInteger();
-            var user = AppDataServices.Users.FirstOrDefault(a => a.Id == this.Id);
+            var user = this.UserService.GetUser(this.Id);
             if (user != null)
             {
                 switch (option)
                 {
                     case HomeMenu.CreateRide:
-                        List<Car> cars = this.CarServices.GetCar(this.Id);
+                        List<Car> cars = this.CarService.GetCars(this.Id);
                         if (cars != null && cars.Any())
                         {
                             foreach (var car in cars)
@@ -105,7 +111,7 @@ namespace CarPooling
                                     Ride ride = UserInput.GetRideDetail();
                                     ride.CarId = cars[choice - 1].Id;
 
-                                    Car carRecord = AppDataServices.Cars.FirstOrDefault(a => a.Id == ride.CarId);
+                                    Car carRecord = AppDataService.Cars.FirstOrDefault(a => a.Id == ride.CarId);
                                     while (true)
                                     {
                                         Console.Write(Constant.AvailableSeats);
@@ -115,7 +121,7 @@ namespace CarPooling
                                         else
                                             Console.WriteLine(Constant.InvalidAvailableSeats);
                                     }
-                                    this.RideServices.CreateRide(ride);
+                                    this.RideService.CreateRide(ride);
                                     break;
                                 }
                                 else if (choice == 0)
@@ -127,7 +133,7 @@ namespace CarPooling
                         else
                         {
                             Console.WriteLine(Constant.NoCarsAdded);
-                            if (this.CarServices.AddNewCar(UserInput.GetCarDetails()))
+                            if (this.CarService.AddNewCar(UserInput.GetCarDetails()))
                                 Console.WriteLine(Constant.AllowRide);
                         }
                         Console.ReadLine();
@@ -137,7 +143,7 @@ namespace CarPooling
 
                     case HomeMenu.BookARide:
                         SearchRideRequest bookingRequest = UserInput.GetBooking();
-                        List<Ride> rides = this.RideServices.GetRidesOffer(bookingRequest);
+                        List<Ride> rides = this.RideService.GetRidesOffer(bookingRequest);
                         if (rides != null && rides.Count > 0)
                         {
                             foreach (var ride in rides)
@@ -152,11 +158,13 @@ namespace CarPooling
                                 int choice = Helper.ValidInteger();
                                 if (choice <= rides.Count && choice != 0)
                                 {
-                                    Booking booking = new Booking();
-                                    booking.From = bookingRequest.From;
-                                    booking.To = bookingRequest.To;
-                                    booking.TravelDate = bookingRequest.TravelDate;
-                                    if (this.BookingServices.CreateBooking(booking, rides[choice - 1].Id))
+                                    Booking booking = new Booking
+                                    {
+                                        From = bookingRequest.From,
+                                        To = bookingRequest.To,
+                                        TravelDate = bookingRequest.TravelDate
+                                    };
+                                    if (this.BookingService.CreateBooking(booking, rides[choice - 1].Id))
                                         Console.WriteLine(Constant.RequestSentToOwner);
                                     else
                                         Console.WriteLine(Constant.InvalidBookingRequest);
@@ -189,7 +197,7 @@ namespace CarPooling
                         break;
 
                     case HomeMenu.AddNewCar:
-                        if (this.CarServices.AddNewCar(UserInput.GetCarDetails()))
+                        if (this.CarService.AddNewCar(UserInput.GetCarDetails()))
                             Console.Write("Car added");
                         else
                             Console.WriteLine("Sorry car not added right now");
@@ -199,7 +207,7 @@ namespace CarPooling
                         break;
 
                     case HomeMenu.ModifyRide:
-                        rides = AppDataServices.Rides.Where(a => a.OwnerId == this.Id).Select(a => a).ToList();
+                        rides = this.RideService.GetRides(this.Id);
                         foreach (var ride in rides)
                         {
                             Console.Write(rides.IndexOf(ride));
@@ -214,9 +222,9 @@ namespace CarPooling
                             {
                                 Display.OfferRide(rides[choice - 1]);
                                 Ride newRide = UserInput.GetRideDetail();
-                                if (UserInput.Confirmation() == ConfirmationResponse.Yes && this.BookingServices.GetBookings(this.Id).Count == 0)
+                                if (UserInput.Confirmation() == ConfirmationResponse.Yes && this.BookingService.GetBookings(this.Id).Count == 0)
                                 {
-                                    this.RideServices.ModifyRide(newRide, rides[choice - 1].Id);
+                                    this.RideService.ModifyRide(newRide, rides[choice - 1].Id);
                                     break;
                                 }
                             }
@@ -227,7 +235,7 @@ namespace CarPooling
                         break;
 
                     case HomeMenu.DeleteRide:
-                        rides = AppDataServices.Rides.Where(a => a.OwnerId == this.Id).Select(a => a).ToList();
+                        rides = this.RideService.GetRides(this.Id);
                         foreach (var ride in rides)
                         {
                             Console.Write(rides.IndexOf(ride) + 1);
@@ -242,7 +250,7 @@ namespace CarPooling
                                 Console.WriteLine(Constant.Confirmation);
                                 if (UserInput.Confirmation() == ConfirmationResponse.Yes)
                                 {
-                                    this.RideServices.CancelRide(rides[choice - 1].Id);
+                                    this.RideService.CancelRide(rides[choice - 1].Id);
                                 }
                             }
                             else if (choice == 0)
@@ -259,14 +267,14 @@ namespace CarPooling
                         break;
 
                     case HomeMenu.DeleteUserAccount:
-                        //Console.WriteLine(Constant.Confirmation);
-                        //if (UserInput.Confirmation() == ConfirmationResponse.Yes)
-                        //{
-                        //    if (this.User.DeleteUser(this.Id))
-                        //    {
-                        //        Console.WriteLine(Constant.DeleteAccoutResponse);
-                        //    }
-                        //}
+                        Console.WriteLine(Constant.Confirmation);
+                        if (UserInput.Confirmation() == ConfirmationResponse.Yes)
+                        {
+                            if (this.UserService.DeleteUser(this.Id))
+                            {
+                                Console.WriteLine(Constant.DeleteAccoutResponse);
+                            }
+                        }
 
                         break;
 
@@ -287,12 +295,12 @@ namespace CarPooling
         public void UpdateMenu()
         {
             Console.WriteLine(Constant.UpdateUserDetailOptions);
-            User user = AppDataServices.Users?.FirstOrDefault(a => a.Id == this.Id);
+            User user = AppDataService.Users?.FirstOrDefault(a => a.Id == this.Id);
             UpdateUserDetailMenu op = (UpdateUserDetailMenu)Helper.ValidInteger();
             switch (op)
             {
                 case UpdateUserDetailMenu.Name:
-                    user.Name = Console.ReadLine();
+                    user.Name = Helper.ValidString();
                     break;
 
                 case UpdateUserDetailMenu.Mobile:
@@ -329,26 +337,34 @@ namespace CarPooling
             {
                 case BookingStatusMenu.RideOffer:
 
-                    List<Ride> rides = this.RideServices.GetRides(this.Id);
+                    List<Ride> rides = this.RideService.GetRides(this.Id);
                     foreach (var ride in rides)
                     {
-                        var pendingBookings = this.BookingServices.GetAllPendingReviewBookings(ride.Id);
+                        var pendingBookings = this.BookingService.GetAllPendingReviewBookings(ride.Id);
 
                         foreach (var pendingBooking in pendingBookings)
                         {
-                            Display.BookingRequest(AppDataServices.Bookings.FirstOrDefault(a => a.Id == pendingBooking.Id));
+                            Display.BookingRequest(AppDataService.Bookings.FirstOrDefault(a => a.Id == pendingBooking.Id));
                         }
                     }
 
                     foreach (var ride in rides)
                     {
-                        var pendingBookings = this.BookingServices.GetAllPendingReviewBookings(ride.Id);
-
+                        var pendingBookings = this.BookingService.GetAllPendingReviewBookings(ride.Id);
                         foreach (var pendingBooking in pendingBookings)
                         {
+                            Display.BookingRequest(AppDataService.Bookings.FirstOrDefault(a => a.Id == pendingBooking.Id));
 
-                            Display.BookingRequest(AppDataServices.Bookings.FirstOrDefault(a => a.Id == pendingBooking.Id));
-                            this.RideServices.SeatBookingResponse(pendingBooking.Id, UserInput.BookingChoice());
+                            BookingStatus status = UserInput.BookingChoice();
+                            if(this.RideService.SeatBookingResponse(pendingBooking.RideId)&&status==Models.BookingStatus.Confirm)
+                            {
+                                this.BookingService.BookingResponse(pendingBooking.Id, Models.BookingStatus.Confirm);
+                            }
+                            else if (status == Models.BookingStatus.Pending) { }
+                            else
+                            {
+                                this.BookingService.BookingResponse(pendingBooking.Id, Models.BookingStatus.Rejected);
+                            }
                         }
                     }
                     if (rides.Count < 1)
@@ -362,7 +378,7 @@ namespace CarPooling
                     break;
 
                 case BookingStatusMenu.RideRequest:
-                    List<Booking> bookings = this.BookingServices.GetUserBookings(this.Id);
+                    List<Booking> bookings = this.BookingService.GetUserBookings(this.Id);
 
                     foreach (var offer in bookings)
                     {
@@ -410,10 +426,10 @@ namespace CarPooling
                     break;
 
                 case BookingStatusMenu.RiderDetail:
-                    rides = AppDataServices.Rides.Where(a => a.OwnerId == this.Id).Select(a => a).ToList();
+                    rides = AppDataService.Rides.Where(a => a.OwnerId == this.Id).Select(a => a).ToList();
                     foreach (var ride in rides)
                     {
-                        int travellerCount = this.BookingServices.GetBookings(ride.Id).Count;
+                        int travellerCount = this.BookingService.GetBookings(ride.Id).Count;
                         Console.WriteLine(Constant.NoOfBookedSeats + travellerCount);
                         Display.OfferRide(ride);
                     }

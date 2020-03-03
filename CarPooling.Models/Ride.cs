@@ -30,11 +30,15 @@ namespace CarPooling.Models
 
         public string CarId { get; set; }
 
-        public RideStatus status { get; set; }
+        public RideStatus Status { get; set; }
 
         public Ride()
         {
-            ViaPoints = new List<Point>();
+            this.From = new Place();
+
+            this.To = new Place();
+
+            this.ViaPoints = new List<Point>();
         }
     }
 }

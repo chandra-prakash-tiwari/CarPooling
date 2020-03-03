@@ -5,7 +5,7 @@ namespace CarPooling.Models
     {
         public static readonly string MainMenuOptions = "1. Login\n2. Signup\n3. Exit";
 
-        public static readonly string UserMainMenuOptions = "1. Create ride \n2. Book a ride \n3. View request status\n4. Add new car \n5. Modify ride details\n6. Delete ride\n7. Update account details\n8. Delete account\n9. SignOut\n0. Exit";
+        public static readonly string UserMainMenuOptions = "1. Create ride \n2. Book a ride \n3. View request status\n4. Add new car \n5. Modify ride details\n6. Delete ride\n7. Update account details\n8. Delete account\n9. SignOut\n10. Exit";
 
         public static readonly string RequestStatusOptions = "1. Ride request status\n2. Booking request status\n3. View booking details\n4. SignOut\n5. Exit";
 

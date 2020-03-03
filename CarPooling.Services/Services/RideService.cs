@@ -8,79 +8,67 @@ using System.Threading.Tasks;
 
 namespace CarPooling.Services.Services
 {
-    public class RideServices : IRideServices
+    public class RideService : IRideService
     {
-        public User CurrentUser { get; set; }
+        public BookingService BookingService { get; set; }
 
-        public BookingServices BookingServices { get; set; }
-
-        public RideServices(string id, BookingServices bookingServices)
+        public RideService(BookingService BookingService)
         {
-            this.CurrentUser = AppDataServices.Users.FirstOrDefault(a => a.Id == id);
-
-            this.BookingServices = bookingServices;
+            this.BookingService = BookingService;
         }
 
         public bool CreateRide(Ride ride)
         {
             ride.RideDate = DateTime.Now;
             ride.Id = Guid.NewGuid().ToString();
-            ride.OwnerId = this.CurrentUser.Id;
-            AppDataServices.Rides.Add(ride);
+            ride.OwnerId = AppDataService.CurrentUser.Id;
+            AppDataService.Rides.Add(ride);
 
             return true;
         }
 
         public List<Ride> GetRidesOffer(SearchRideRequest booking)
         {
-            var fromCityId = ViaPointsInfo.Points?.FirstOrDefault(via => via.FromCity == booking.From.City);
-            var toCityId = ViaPointsInfo.Points?.FirstOrDefault(via => via.ToCity == booking.To.City);
+            var from = ViaPointsInfo.Points?.FirstOrDefault(via => via.FromCity == booking.From.City);
+            var to = ViaPointsInfo.Points?.FirstOrDefault(via => via.ToCity == booking.To.City);
 
-            return AppDataServices.Rides?.Where(ride => ride.TravelDate == booking.TravelDate &&
-            ride.AvailableSeats > 0 && fromCityId.FromCity == booking.From.City && toCityId.ToCity == booking.To.City).ToList();
+            return AppDataService.Rides?.Where(ride => ride.TravelDate == booking.TravelDate &&
+            ride.AvailableSeats > 0 && from.FromCity == booking.From.City && to.ToCity == booking.To.City).ToList();
         }
 
         public bool CancelRide(string rideId)
         {
-            Ride ride = AppDataServices.Rides.FirstOrDefault(a => a.Id == rideId);
-
-            if (ride != null && this.BookingServices.GetBookings(rideId).Any())
+            Ride ride = AppDataService.Rides.FirstOrDefault(a => a.Id == rideId);
+            if (ride != null && this.BookingService.GetBookings(rideId).Any())
             {
-                ride.status = RideStatus.Cancel;
+                ride.Status = RideStatus.Cancel;
                 return true;
             }
 
             return false;
         }
 
-        public bool SeatBookingResponse(string bookingId, BookingStatus status)
+        public bool SeatBookingResponse(string rideId)
         {
-            Ride ride = GetRide(this.BookingServices.GetRequester(bookingId));
-
-            if (ride.AvailableSeats > 0 && status == BookingStatus.Confirm)
+            Ride ride = GetRide(rideId);
+            if (ride.AvailableSeats > 0)
             {
-                this.BookingServices.BookingResponse(bookingId, status);
                 ride.AvailableSeats--;
                 return true;
             }
-            else
-            {
-                this.BookingServices.BookingResponse(bookingId, BookingStatus.Rejected);
-                return false;
-            }
+
+            return false;
         }
 
         public bool ModifyRide(Ride newRide, string id)
         {
             Ride oldRide = this.GetRide(id);
-
             if (oldRide != null)
             {
                 oldRide.RideDate = newRide.RideDate;
                 oldRide.From = newRide.From;
                 oldRide.CarId = newRide.CarId;
                 oldRide.To = newRide.To;
-
             }
 
             return true;
@@ -88,12 +76,12 @@ namespace CarPooling.Services.Services
 
         public Ride GetRide(string id)
         {
-            return AppDataServices.Rides?.FirstOrDefault(ride => ride.Id == id);
+            return AppDataService.Rides?.FirstOrDefault(ride => ride.Id == id);
         }
 
         public List<Ride> GetRides(string ownerId)
         {
-            return AppDataServices.Rides?.Where(ride => ride.OwnerId == ownerId).ToList();
+            return AppDataService.Rides?.Where(ride => ride.OwnerId == ownerId).ToList();
         }
     }
 }

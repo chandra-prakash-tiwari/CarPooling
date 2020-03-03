@@ -60,7 +60,7 @@ namespace CarPooling
         public static string GetValidUserName()
         {
             string userName = Console.ReadLine();
-            if (string.IsNullOrEmpty(userName) || (AppDataServices.Users.FirstOrDefault(a=>a.UserName==userName)!=null))
+            if (string.IsNullOrEmpty(userName) || (AppDataService.Users.FirstOrDefault(a=>a.UserName==userName)!=null))
             {
                 Console.WriteLine(Constant.UserNameNotAvailable);
                 userName = GetValidUserName();
