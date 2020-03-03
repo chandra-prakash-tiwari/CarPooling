@@ -15,7 +15,7 @@ namespace CarPooling.Services.Interfaces
 
         bool CancelRide(string rideId);
 
-        bool SeatBookingResponse(string bookingId, BookingStatus status);
+        bool SeatBookingResponse(string bookingId);
 
         bool ModifyRide(Ride newRide, string id);
 
